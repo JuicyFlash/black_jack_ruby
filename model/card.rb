@@ -8,7 +8,7 @@ class Card
     self.card_suit = card_suit
   end
 
-  def card_value
+  def value
     if card_idx > 10
       10
     else
@@ -17,7 +17,7 @@ class Card
   end
 
 
-  def card_alternative_value
+  def alternative_value
     if card_idx > 10 || card_idx == 1
       10
     else
@@ -25,7 +25,7 @@ class Card
     end
   end
 
-  def card_name
+  def name
     case
     when  card_idx == 1
       "[A#{suits_for_print[card_suit]}]"
@@ -36,7 +36,7 @@ class Card
     when  card_idx == 13
       "[K#{suits_for_print[card_suit]}]"
     else
-      "[#{card_value}#{suits_for_print[card_suit]}]"
+      "[#{value}#{suits_for_print[card_suit]}]"
     end
   end
 
