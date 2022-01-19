@@ -7,8 +7,10 @@ require_relative 'dimond_card'
 
 class Deck
 
-  def cards
-    @cards ||= []
+  attr_reader :cards
+
+  def initialize
+    @cards = []
   end
 
   def give_card
