@@ -2,9 +2,8 @@
 require_relative 'player'
 
 class ComputerPlayer < Player
-  def initialize(name, bank, deck)
+  def initialize(name, bank)
     super
-    controlled_by = :computer
   end
 
   def need_card?

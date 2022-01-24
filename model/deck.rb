@@ -31,13 +31,15 @@ class Deck
     @cards = []
   end
 
-  def generate_full_deck
-    reset
+  def self.generate_full_deck(deck)
+    deck.reset
     i = 1
     13.times do
-     put_cards(ClubCard.new(i), HeartCard.new(i), DimondCard.new(i), SpadeCard.new(i))
-     i += 1
-   end
+      deck.put_cards(ClubCard.new(i), HeartCard.new(i), DimondCard.new(i), SpadeCard.new(i))
+      i += 1
+    end
   end
+
+
 
 end

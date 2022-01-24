@@ -1,14 +1,20 @@
 require_relative 'deck'
+require_relative 'validation'
 
 class Player
-
-  attr_accessor :name, :bank, :deck, :controlled_by
+  include Validation
+  attr_accessor :name, :bank, :deck
   attr_reader :score
 
-  def initialize(name, bank, deck)
+  validate :name, :presence
+  validate :bank, :presence
+  validate :bank, :type, Integer
+  validate :deck, :type, Deck
+
+  def initialize(name, bank)
     self.name = name
     self.bank = bank
-    self.deck = deck
+    self.deck = Deck.new()
   end
 
   def need_card?
@@ -27,6 +33,14 @@ class Player
       a_value_count -= 1
     end
     result
+  end
+
+  def cards
+    deck.cards
+  end
+
+  def take_deck(deck)
+    self.deck = deck
   end
 
   def take_card(card)
