@@ -1,10 +1,9 @@
 require_relative 'deck'
-require_relative 'validation'
+require_relative '../utils/validation'
 
 class Player
   include Validation
   attr_accessor :name, :bank, :deck
-  attr_reader :score
 
   validate :name, :presence
   validate :bank, :presence
