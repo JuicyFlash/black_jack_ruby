@@ -1,68 +1,52 @@
 
-require_relative 'model/deck'
-require_relative 'model/player'
-require_relative 'model/computer_player'
+require_relative '../model/deck'
+require_relative '../model/player'
+require_relative '../model/computer_player'
 
 class Game
 
-  attr_reader :is_active, :diller, :player, :game_bank
+  attr_reader :is_active, :game_bank, :game_message
+
+  ACTIONS =
+    [{
+      name: :exit,
+      caption: 'Выход'
+    },
+     {
+       name: :finish_game,
+       caption: 'Завершить игру - открыть карты'
+
+     },
+     {
+       name: :player_take_card,
+       caption: 'Взять карту'
+
+     },
+     {
+       name: :finish_turn,
+       caption: 'Завершить ход'
+
+     },
+     {
+       name: :register_player,
+       caption: 'Регистрация игрока'
+
+     },
+     {
+       name: :start_game,
+       caption: 'Начать игру'
+     }].freeze
 
   def initialize
+
     @is_active = true
     @available_actions = []
     @game_bank = 0
     @game_message = 'необходимо зарегистрировать игрока'
     @game_status = :prepare
     @diller = ComputerPlayer.new('Дилер', 100)
-    @actions =
-      [{
-        name: 'exit',
-        caption: 'Выход',
-        action: method(:exit)
-      },
-       {
-         name: 'finish_game',
-         caption: 'Завершить игру - открыть карты',
-         action: method(:finish_game)
-       },
-       {
-         name: 'take_card',
-         caption: 'Взять карту',
-         action: method(:player_take_card)
-       },
-       {
-         name: 'finish_turn',
-         caption: 'Завершить ход',
-         action: method(:finish_turn)
-       },
-       {
-         name: 'register_player',
-         caption: 'Регистрация игрока',
-         action: method(:register_player)
-       },
-       {
-         name: 'start_game',
-         caption: 'Начать игру',
-         action: method(:start_game)
-       }]
 
-  end
 
-  def game_message
-    puts "Сообщение игры: #{@game_message}"
-  end
-
-  def game_statistic
-    puts '---------------------------------'
-    game_message
-    if @game_status.eql?(:in_progress)
-      player_info_anonymous (diller)
-    else
-      player_info(diller)
-    end
-    puts "[ В банке игры: #{game_bank} ]" if game_bank.positive?
-    player_info(player)
-    puts '-----------'
   end
 
   def available_actions
@@ -70,26 +54,79 @@ class Game
 
     # Начало игры, доступно действие регистрации игрока
     if player.nil? && @game_status == :prepare
-      @available_actions << @actions.select { |action| action[:name] == 'register_player' }[0]
+      @available_actions <<  get_action(:register_player)
 
     # Если игрок зарегистрирован или игра закончена добавляем действие начать игру (заново)
     elsif (!player.nil? && @game_status == :prepare) || @game_status == :finish
-      @available_actions << @actions.select { |action| action[:name] == 'start_game' }[0]
+      @available_actions << get_action(:start_game)
+
     # Если игра в процессе
     elsif @game_status == :in_progress
       # Добавляем действие взять карту текущему игроку, если она ему нужна
-      @available_actions << @actions.select { |action| action[:name] == 'take_card' }[0]
+      @available_actions << get_action(:player_take_card)
+
       # Действие завершить ход
-      @available_actions << @actions.select { |action| action[:name] == 'finish_turn' }[0]
+      @available_actions << get_action(:finish_turn)
+
       # Днйствие завершить игру (открыть карты)
-      @available_actions << @actions.select { |action| action[:name] == 'finish_game' }[0]
+      @available_actions << get_action(:finish_game)
+
     end
     # Действие выход
-    @available_actions << @actions.select { |action| action[:name] == 'exit' }[0]
+    @available_actions << get_action(:exit)
+
     @available_actions
   end
 
+  def players_info
+    players ||= []
+    players << player_info(diller)
+    players << player_info(player)
+    players
+  end
+
   private
+
+  attr_reader :player, :diller
+
+  # Получаем событие
+  def get_action(action_name)
+    { caption: ACTIONS.select { |action| action[:name] == action_name }[0][:caption],
+      action: method(ACTIONS.select { |action| action[:name] == action_name }[0][:name]) }
+  end
+
+  # Информация по игроку
+  def player_info(player)
+    unless player.nil?
+      { name: player.name,
+        score: player_score(player),
+        bank: player.bank,
+        cards: player_cards(player) }
+    end
+  end
+
+  def player_score(player)
+    if (player == @diller) && @game_status != :finish
+      '??'
+    else
+      player.score.to_s
+    end
+  end
+
+  def player_cards(player)
+    cards = ''
+    if player.cards.length.positive?
+      player.cards.each do |card|
+        cards += if (player == @diller) && @game_status != :finish
+                   '[X]'
+                 else
+                   card.name
+                 end
+      end
+    end
+    cards
+  end
+
   # Сделать автоход
   def auto_turn
     player_take_card if players_turn == diller && players_turn.need_card?
@@ -121,33 +158,6 @@ class Game
   # Возаврашает игрока текущего хода
   def players_turn
     @players_turn ||= diller
-  end
-
-  # Обезличенная информация по игроку
-  def player_info_anonymous(player)
-    puts "Игрок: #{player.name}, банк: #{player.bank}"
-    print 'Карты: '
-    player.cards.length.times { print '[X]' }
-    puts
-    puts 'Очки ??'
-  end
-
-  # Информация по игроку
-  def player_info(player)
-
-    unless player.nil?
-      puts "Игрок: #{player.name}, банк: #{player.bank}"
-
-      if player.cards.length.positive?
-        print 'Карты: '
-        player.cards.each do |card|
-          print card.name
-        end
-        puts
-        puts "Очки: #{player.score}"
-      end
-    end
-
   end
 
   # =====================Методы @actions=====================
@@ -211,6 +221,7 @@ class Game
     @game_bank = 0
 
   end
+
   # Выход
   def exit
     @is_active = false
