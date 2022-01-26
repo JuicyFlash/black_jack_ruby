@@ -1,4 +1,4 @@
-require_relative 'controller/game'
+require_relative '../controller/game'
 
 class GameInterface
 
